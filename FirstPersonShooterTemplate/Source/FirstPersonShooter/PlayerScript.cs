@@ -158,26 +158,16 @@ public class PlayerScript : Script
     // prevVelocity: The current velocity of the player, before any additional calculations
     // accelerate: The server-defined player acceleration value
     // maxVelocity: The server-defined maximum player velocity (this is not strictly adhered to due to strafejumping)
-    private Vector3 Accelerate(Vector3 accelDir, Vector3 prevVelocity, float accelerate, float maxVelocity, float wishspeed)
+    private Vector3 Accelerate(Vector3 accelDir, Vector3 prevVelocity, float accelerate, float maxVelocity)
     {
-        float addspeed;
-        float accelspeed;
-        float currentspeed;
+        float projVel = Vector3.Dot(prevVelocity, accelDir); // Vector projection of Current velocity onto accelDir
+        float accelVel = accelerate * Time.DeltaTime; // Accelerated velocity in direction of movement
 
-        currentspeed = Vector3.Dot(prevVelocity, accelDir); // Vector projection of Current velocity onto accelDir
-        addspeed = wishspeed - currentspeed;
-        if (addspeed <= 0) {
-            return Vector3.Zero;
-        }
+        // If necessary, truncate the accelerated velocity so the vector projection does not exceed max velocity
+        if (projVel + accelVel > maxVelocity)
+            accelVel = maxVelocity - projVel;
 
-        // Accelerated velocity in direction of movement
-        accelspeed = accelerate * Time.DeltaTime * wishspeed;
-
-        if (accelspeed > addspeed) {
-            accelspeed = addspeed;
-        }
-   
-        return prevVelocity + accelDir * accelspeed;
+        return prevVelocity + accelDir * accelVel;
     }
 
     private Vector3 MoveGround(Vector3 accelDir, Vector3 prevVelocity)
@@ -191,15 +181,13 @@ public class PlayerScript : Script
         }
 
         // GroundAccelerate and MaxVelocityGround are server-defined movement variables
-        float groundspeed = 400;
-        return Accelerate(accelDir, prevVelocity, GroundAccelerate, MaxVelocityGround,groundspeed);
+        return Accelerate(accelDir, prevVelocity, GroundAccelerate, MaxVelocityGround);
     }
 
     private Vector3 MoveAir(Vector3 accelDir, Vector3 prevVelocity)
     {
         // air_accelerate and max_velocity_air are server-defined movement variables
-        float airspeed = 200;
-        return Accelerate(accelDir, prevVelocity, AirAccelerate, MaxVelocityAir,airspeed);
+        return Accelerate(accelDir, prevVelocity, AirAccelerate, MaxVelocityAir);
     }
 
     public override void OnDebugDraw()
