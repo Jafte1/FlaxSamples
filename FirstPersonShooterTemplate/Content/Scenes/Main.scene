@@ -1,7 +1,7 @@
 {
 	"ID": "a470726f441936acfe25318b162c336c",
 	"TypeName": "FlaxEngine.SceneAsset",
-	"EngineBuild": 6213,
+	"EngineBuild": 6216,
 	"Data": [
 		{
 			"ID": "a470726f441936acfe25318b162c336c",
@@ -445,6 +445,7 @@
 	"PlayerController": "8dd8b65446747a93c055c2aee97de390",
 	"CameraTarget": "9b1b849f4ef1d7aa11977e91a446dde5",
 	"Camera": "5543ed36412ccd0f04717a90d39e877e",
+	"myUI": "769063574292cf3e0d0c159359901898",
 	"SphereModel": "dd86c4724bf734c4959d23b3c74faa05"
 }
 		},
@@ -1028,8 +1029,8 @@
 			},
 			"V": {
 	"Size": {
-		"X": 1091.0,
-		"Y": 580.0
+		"X": 0.0,
+		"Y": 0.0
 	}
 }
 		},
@@ -1038,7 +1039,6 @@
 			"TypeName": "VirtualCamera",
 			"ParentID": "6f69f8844b81602bf76aae993fe88bb2",
 			"V": {
-	"Camera": "2f7e40cd4db0f8b2ea37769416965316",
 	"VirtualThumbStick_Left": "ce8f05d54e3e2c8da9e915a0c2c90a19",
 	"VirtualThumbStick_Right": "a5af5a2e4ee22271e3709b8bade81ca9",
 	"Strength_Right": 1.5
@@ -1051,8 +1051,8 @@
 			"Name": "VirtualThumbstick_Right",
 			"Transform": {
 				"Translation": {
-					"X": 941.0,
-					"Y": 430.0,
+					"X": -150.0,
+					"Y": -150.0,
 					"Z": 0.0
 				}
 			},
@@ -1120,7 +1120,7 @@
 			"Transform": {
 				"Translation": {
 					"X": 0.0,
-					"Y": 430.0,
+					"Y": -150.0,
 					"Z": 0.0
 				}
 			},
@@ -1287,6 +1287,106 @@
 			"TypeName": "PerfCounter",
 			"ParentID": "2a6eff9c4862e0546efbd0bf2b3c3a7b",
 			"V": {}
+		},
+		{
+			"ID": "2a60305348062f97c899e3bbb8a7af3c",
+			"TypeName": "FlaxEngine.UICanvas",
+			"ParentID": "a470726f441936acfe25318b162c336c",
+			"Name": "UICanvas",
+			"Transform": {
+				"Orientation": {
+					"X": 1.0,
+					"Y": 4.371138828673793e-8,
+					"Z": 4.371138828673793e-8,
+					"W": 1.910685465164705e-15
+				}
+			},
+			"V": {
+	"Size": {
+		"X": 900.0,
+		"Y": 560.0
+	}
+}
+		},
+		{
+			"ID": "769063574292cf3e0d0c159359901898",
+			"TypeName": "FlaxEngine.UIControl",
+			"ParentID": "2a60305348062f97c899e3bbb8a7af3c",
+			"Name": "UIControl",
+			"Control": "FlaxEngine.GUI.Label",
+			"Data": {
+	"TextColor": {
+		"R": 1.0,
+		"G": 1.0,
+		"B": 1.0,
+		"A": 1.0
+	},
+	"TextColorHighlighted": {
+		"R": 1.0,
+		"G": 1.0,
+		"B": 1.0,
+		"A": 1.0
+	},
+	"HorizontalAlignment": 1,
+	"VerticalAlignment": 1,
+	"Wrapping": 0,
+	"Font": {
+		"Font": "4508d98f4aa1f0bd59362b81d47e38f4",
+		"Size": 9
+	},
+	"Margin": {
+		"Left": 0.0,
+		"Right": 0.0,
+		"Top": 0.0,
+		"Bottom": 0.0
+	},
+	"ClipText": false,
+	"AutoWidth": false,
+	"AutoHeight": false,
+	"AutoFitText": false,
+	"AutoFitTextRange": {
+		"X": 0.1,
+		"Y": 100.0
+	},
+	"ClipChildren": true,
+	"CullChildren": true,
+	"AnchorMin": {
+		"X": 0.0,
+		"Y": 0.0
+	},
+	"AnchorMax": {
+		"X": 0.0,
+		"Y": 0.0
+	},
+	"Offsets": {
+		"Left": 0.0,
+		"Right": 100.0,
+		"Top": 0.0,
+		"Bottom": 20.0
+	},
+	"Scale": {
+		"X": 1.0,
+		"Y": 1.0
+	},
+	"Pivot": {
+		"X": 0.5,
+		"Y": 0.5
+	},
+	"Shear": {
+		"X": 0.0,
+		"Y": 0.0
+	},
+	"Rotation": 0.0,
+	"BackgroundColor": {
+		"R": 0.0,
+		"G": 0.0,
+		"B": 0.0,
+		"A": 0.0
+	},
+	"Enabled": true,
+	"Visible": true,
+	"AutoFocus": false
+}
 		}
 	]
 }

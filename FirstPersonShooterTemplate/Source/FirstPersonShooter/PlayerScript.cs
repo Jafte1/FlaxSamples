@@ -1,11 +1,16 @@
 using System;
 using FlaxEngine;
+using FlaxEngine.GUI;
 
 public class PlayerScript : Script
 {
     public CharacterController PlayerController;
     public Actor CameraTarget;
     public Camera Camera;
+
+    public UIControl myUI;
+    public float uispeed = 0f;
+    private Label myLabel;
 
     public Model SphereModel;
 
@@ -15,7 +20,7 @@ public class PlayerScript : Script
     public bool UseMouse = true;
     public float JumpForce = 800;
 
-    public float Friction = 8.0f;
+    public float Friction = 6.0f;
     public float GroundAccelerate = 5000;
     public float AirAccelerate = 10000;
     public float MaxVelocityGround = 400;
@@ -35,6 +40,11 @@ public class PlayerScript : Script
     /// <param name="vertical">The vertical input.</param>
     /// <param name="pitch">The pitch rotation input.</param>
     /// <param name="yaw">The yaw rotation input.</param>
+    /// 
+
+    public override void OnStart() {
+        myLabel = myUI.Get<Label>();
+    }
     public void AddMovementRotation(float horizontal, float vertical, float pitch, float yaw)
     {
         _pitch += pitch;
@@ -60,7 +70,7 @@ public class PlayerScript : Script
         // Jump
         if (CanJump && Input.GetAction("Jump"))
             _jump = true;
-
+        myLabel.Text = uispeed.ToString();
         // Shoot
         if (Input.GetAction("Fire"))
         {
@@ -151,6 +161,7 @@ public class PlayerScript : Script
 
         // Move
         PlayerController.Move(velocity * Time.DeltaTime);
+        uispeed = Mathf.Abs(PlayerController.Velocity.Length);
         _velocity = velocity;
     }
 
@@ -172,7 +183,6 @@ public class PlayerScript : Script
             accelspeed = addspeed;
         }
   
-
         return prevVelocity + accelspeed * accelDir;
     }
 
