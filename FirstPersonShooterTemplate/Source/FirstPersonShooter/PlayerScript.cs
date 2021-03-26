@@ -2,6 +2,12 @@ using System;
 using FlaxEngine;
 using FlaxEngine.GUI;
 
+struct Cmd { 
+    public float horizontal;
+    public float vertical;
+    public float up;
+}
+
 public class PlayerScript : Script
 {
     public CharacterController PlayerController;
@@ -16,15 +22,19 @@ public class PlayerScript : Script
 
     public float CameraSmoothing = 20.0f;
 
+    private Cmd _cmd;
     public bool CanJump = true;
     public bool UseMouse = true;
     public float JumpForce = 800;
 
     public float Friction = 6.0f;
+    private float playerFriction = 0.0f;
     public float GroundAccelerate = 5000;
     public float AirAccelerate = 10000;
     public float MaxVelocityGround = 400;
     public float MaxVelocityAir = 200;
+
+    public float runDeacceleration = 10.0f;
 
     private Vector3 _velocity;
     private bool _jump;
@@ -32,6 +42,10 @@ public class PlayerScript : Script
     private float _yaw;
     private float _horizontal;
     private float _vertical;
+
+    private bool wishJump = false;
+
+    private float mouseSens = 1; // > 0
 
     /// <summary>
     /// Adds the movement and rotation to the camera (as input).
@@ -43,6 +57,9 @@ public class PlayerScript : Script
     /// 
 
     public override void OnStart() {
+        _cmd.vertical = 0;
+        _cmd.horizontal = 0;
+        _cmd.up = 0;
         myLabel = myUI.Get<Label>();
     }
     public void AddMovementRotation(float horizontal, float vertical, float pitch, float yaw)
@@ -62,14 +79,18 @@ public class PlayerScript : Script
             Screen.CursorLock = CursorLockMode.Locked;
 
             // Mouse
-            Vector2 mouseDelta = new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
+            Vector2 mouseDelta = new Vector2(Input.GetAxis("Mouse X")*mouseSens, Input.GetAxis("Mouse Y")*mouseSens);
             _pitch = Mathf.Clamp(_pitch + mouseDelta.Y, -88, 88);
             _yaw += mouseDelta.X;
         }
 
         // Jump
-        if (CanJump && Input.GetAction("Jump"))
+        CheckJump();
+        /*
+        if (CanJump && Input.GetAction("Jump")) {
             _jump = true;
+        }
+        */
         myLabel.Text = uispeed.ToString();
         // Shoot
         if (Input.GetAction("Fire"))
@@ -106,6 +127,41 @@ public class PlayerScript : Script
         return new Vector3(v.X, 0, v.Z);
     }
 
+    private void CheckJump() {
+
+        if (Input.GetAction("Jump") && !wishJump)
+            wishJump = true;
+        if (Input.GetAction("Jump"))
+            wishJump = false;
+    }
+    private void PM_Friction(Vector3 playerVelocity, float t) {
+        Vector3 vec = playerVelocity; // Equivalent to: VectorCopy();
+        float speed;
+        float newspeed;
+        float control;
+        float drop;
+
+        vec.Z = 0.0f;
+        speed = vec.Length;
+        drop = 0.0f;
+
+        /* Only if the player is on the ground then apply friction */
+        if (PlayerController.IsGrounded) {
+            control = speed < runDeacceleration ? runDeacceleration : speed;
+            drop = control * Friction * Time.DeltaTime * t;
+        }
+
+        newspeed = speed - drop;
+        playerFriction = newspeed;
+        if (newspeed < 0)
+            newspeed = 0;
+        if (speed > 0)
+            newspeed /= speed;
+
+        playerVelocity.X *= newspeed;
+        playerVelocity.Y *= newspeed;
+    }
+
     public override void OnFixedUpdate()
     {
         // Update camera
@@ -119,17 +175,24 @@ public class PlayerScript : Script
 
         var inputH = Input.GetAxis("Horizontal") + _horizontal;
         var inputV = Input.GetAxis("Vertical") + _vertical;
+        _cmd.horizontal = Input.GetAxis("Horizontal") + _horizontal;
+        _cmd.vertical = Input.GetAxis("Vertical") + _vertical;
         _horizontal = 0;
         _vertical = 0;
 
-        var velocity = new Vector3(inputH, 0.0f, inputV);
+       // var velocity = new Vector3(inputH, 0.0f, inputV);
+        var velocity = new Vector3(_cmd.horizontal,0f,_cmd.vertical);
         velocity.Normalize();
         velocity = CameraTarget.Transform.TransformDirection(velocity);
+
+        //Jump
+
+        //Friction
 
         if (PlayerController.IsGrounded)
         {
             velocity = MoveGround(velocity.Normalized, Horizontal(_velocity));
-            velocity.Y = -Mathf.Abs(Physics.Gravity.Y * 0.5f);
+           // velocity.Y = -Mathf.Abs(Physics.Gravity.Y * 0.5f);
         }
         else
         {
@@ -141,10 +204,12 @@ public class PlayerScript : Script
         if (velocity.Length < 0.05f)
             velocity = Vector3.Zero;
 
+        /*
         if (_jump && PlayerController.IsGrounded)
             velocity.Y = JumpForce;
 
         _jump = false;
+        */
 
         // Apply gravity
         velocity.Y += -Mathf.Abs(Physics.Gravity.Y * 2.5f) * Time.DeltaTime;
