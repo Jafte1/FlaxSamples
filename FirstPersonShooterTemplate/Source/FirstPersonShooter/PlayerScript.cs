@@ -27,13 +27,6 @@ public class PlayerScript : Script
     public bool UseMouse = true;
     public float JumpForce = 800;
 
-    public float Friction = 6.0f;
-    private float playerFriction = 0.0f;
-    public float GroundAccelerate = 5000;
-    public float AirAccelerate = 10000;
-    public float MaxVelocityGround = 400;
-    public float MaxVelocityAir = 200;
-
     public float runDeacceleration = 10.0f;
 
     private Vector3 _velocity;
@@ -44,6 +37,27 @@ public class PlayerScript : Script
     private float _vertical;
 
     private bool wishJump = false;
+
+    // movement parameters
+    private float CM_stopspeed = 100.0f;
+    private float CM_duckScale = 0.25f;
+    private float CM_swimScale = 0.50f;
+
+    private float CM_accelerate = 10.0f;
+    private float CM_airaccelerate = 1.0f;
+    private float CM_wateraccelerate = 4.0f;
+    private float CM_flyaccelerate = 8.0f;
+
+    private float CM_friction = 6.0f;
+    private float CM_waterfriction = 1.0f;
+    private float CM_flightfriction = 3.0f;
+    private float CM_spectatorfriction = 5.0f;
+
+    private float maxspeed = 400f;
+
+    private float playerFriction = 0.0f;
+
+    int c_pmove = 0;
 
     private float mouseSens = 1; // > 0
 
@@ -148,7 +162,7 @@ public class PlayerScript : Script
         /* Only if the player is on the ground then apply friction */
         if (PlayerController.IsGrounded) {
             control = speed < runDeacceleration ? runDeacceleration : speed;
-            drop = control * Friction * Time.DeltaTime * t;
+            drop = control * CM_friction * Time.DeltaTime * t;
         }
 
         newspeed = speed - drop;
@@ -192,7 +206,7 @@ public class PlayerScript : Script
         if (PlayerController.IsGrounded)
         {
             velocity = MoveGround(velocity.Normalized, Horizontal(_velocity));
-           // velocity.Y = -Mathf.Abs(Physics.Gravity.Y * 0.5f);
+            //velocity.Y = -Mathf.Abs(Physics.Gravity.Y * 0.5f);
         }
         else
         {
@@ -257,19 +271,19 @@ public class PlayerScript : Script
         float speed = prevVelocity.Length;
         if (Math.Abs(speed) > 0.01f) // To avoid divide by zero errors
         {
-            float drop = speed * Friction * Time.DeltaTime;
+            float drop = speed * CM_friction * Time.DeltaTime;
             prevVelocity *= Mathf.Max(speed - drop, 0) / speed; // Scale the velocity based on friction
         }
         float wishspeed = 400f;
         // GroundAccelerate and MaxVelocityGround are server-defined movement variables
-        return Accelerate(accelDir, prevVelocity, GroundAccelerate, MaxVelocityGround,wishspeed);
+        return Accelerate(accelDir, prevVelocity, CM_accelerate, maxspeed, wishspeed);
     }
 
     private Vector3 MoveAir(Vector3 accelDir, Vector3 prevVelocity)
     {
         float wishspeed = 200f;
         // air_accelerate and max_velocity_air are server-defined movement variables
-        return Accelerate(accelDir, prevVelocity, AirAccelerate, MaxVelocityAir,wishspeed);
+        return Accelerate(accelDir, prevVelocity, CM_airaccelerate, maxspeed, wishspeed);
     }
 
     public override void OnDebugDraw()
