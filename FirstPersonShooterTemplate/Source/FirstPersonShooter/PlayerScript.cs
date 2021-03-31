@@ -53,7 +53,8 @@ public class PlayerScript : Script
     private float CM_flightfriction = 3.0f;
     private float CM_spectatorfriction = 5.0f;
 
-    private float maxspeed = 400f;
+    private float CM_groundspeed = 400;
+    private float CM_airspeed = 400;
 
     private float playerFriction = 0.0f;
 
@@ -127,7 +128,7 @@ public class PlayerScript : Script
                 StaticFlags = StaticFlags.None
             };
             ball.Transform = new Transform(
-                CameraTarget.Position + Horizontal(CameraTarget.Direction) * 70.0f,
+                CameraTarget.Position + (CameraTarget.Direction.Z) * 70.0f,
                 Quaternion.Identity,
                 new Vector3(0.1f));
             Level.SpawnActor(ball);
@@ -136,11 +137,29 @@ public class PlayerScript : Script
         }
     }
 
-    private Vector3 Horizontal(Vector3 v)
-    {
-        return new Vector3(v.X, 0, v.Z);
-    }
+    private float PM_CmdScale(Cmd cmd, float maxspeed) {
+        float max;
+        float total;
+        float scale;
 
+        //max = abs(cmd->forwardmove);
+        max = Mathf.Abs(cmd.vertical);
+        if (Mathf.Abs(cmd.horizontal) > max) {
+            max = Mathf.Abs(cmd.horizontal);
+        }
+        if (Mathf.Abs(cmd.up) > max) {
+            max = Mathf.Abs(cmd.up);
+        }
+        if (max.Equals(null)) {
+            return 0;
+        }
+
+        total = Mathf.Sqrt(cmd.vertical * cmd.vertical
+            + cmd.horizontal * cmd.horizontal + cmd.up * cmd.up);
+        scale = (float)(maxspeed * max / (127.0 * total));
+
+        return scale;
+    }
     private void CheckJump() {
 
         if (Input.GetAction("Jump") && !wishJump)
@@ -148,7 +167,7 @@ public class PlayerScript : Script
         if (Input.GetAction("Jump"))
             wishJump = false;
     }
-    private void PM_Friction(Vector3 playerVelocity, float t) {
+    private Vector3 PM_Friction(Vector3 playerVelocity, float t) {
         Vector3 vec = playerVelocity; // Equivalent to: VectorCopy();
         float speed;
         float newspeed;
@@ -174,7 +193,39 @@ public class PlayerScript : Script
 
         playerVelocity.X *= newspeed;
         playerVelocity.Y *= newspeed;
+        return playerVelocity;
     }
+
+    private Vector3 ApplyFriction(Vector3 playerVelocity,float t) {
+        Vector3 vec = playerVelocity; // Equivalent to: VectorCopy();
+        float speed;
+        float newspeed;
+        float control;
+        float drop;
+
+        vec.Y = 0.0f;
+        speed = vec.Length;
+        drop = 0.0f;
+
+        /* Only if the player is on the ground then apply friction */
+        if (PlayerController.IsGrounded) {
+            control = speed < runDeacceleration ? runDeacceleration : speed;
+            drop = control * CM_friction * Time.DeltaTime * t;
+        }
+
+        newspeed = speed - drop;
+        playerFriction = newspeed;
+        if (newspeed < 0)
+            newspeed = 0;
+        if (speed > 0)
+            newspeed /= speed;
+
+        playerVelocity.X *= newspeed;
+        playerVelocity.Z *= newspeed;
+
+        return playerVelocity;
+    }
+
 
     public override void OnFixedUpdate()
     {
@@ -187,14 +238,11 @@ public class PlayerScript : Script
         camTrans.Orientation = CameraTarget.Orientation;
         Camera.Transform = camTrans;
 
-        var inputH = Input.GetAxis("Horizontal") + _horizontal;
-        var inputV = Input.GetAxis("Vertical") + _vertical;
         _cmd.horizontal = Input.GetAxis("Horizontal") + _horizontal;
         _cmd.vertical = Input.GetAxis("Vertical") + _vertical;
         _horizontal = 0;
         _vertical = 0;
 
-       // var velocity = new Vector3(inputH, 0.0f, inputV);
         var velocity = new Vector3(_cmd.horizontal,0f,_cmd.vertical);
         velocity.Normalize();
         velocity = CameraTarget.Transform.TransformDirection(velocity);
@@ -205,13 +253,13 @@ public class PlayerScript : Script
 
         if (PlayerController.IsGrounded)
         {
-            velocity = MoveGround(velocity.Normalized, Horizontal(_velocity));
+            velocity = MoveGround(velocity.Normalized, _velocity);
             //velocity.Y = -Mathf.Abs(Physics.Gravity.Y * 0.5f);
         }
         else
         {
-            velocity = MoveAir(velocity.Normalized, Horizontal(_velocity));
-            velocity.Y = _velocity.Y;
+            velocity = MoveAir(velocity.Normalized, _velocity);
+            //velocity.Y = _velocity.Y;
         }
 
         // Fix direction
@@ -248,7 +296,7 @@ public class PlayerScript : Script
     // prevVelocity: The current velocity of the player, before any additional calculations
     // accelerate: The server-defined player acceleration value
     // maxVelocity: The server-defined maximum player velocity (this is not strictly adhered to due to strafejumping)
-    private Vector3 Accelerate(Vector3 accelDir, Vector3 prevVelocity, float accel, float maxVelocity,float wishspeed)
+    private Vector3 Accelerate(Vector3 accelDir, Vector3 prevVelocity, float accel,float wishspeed)
     {
         float addspeed, accelspeed, currentspeed;
 
@@ -274,16 +322,15 @@ public class PlayerScript : Script
             float drop = speed * CM_friction * Time.DeltaTime;
             prevVelocity *= Mathf.Max(speed - drop, 0) / speed; // Scale the velocity based on friction
         }
-        float wishspeed = 400f;
+ 
         // GroundAccelerate and MaxVelocityGround are server-defined movement variables
-        return Accelerate(accelDir, prevVelocity, CM_accelerate, maxspeed, wishspeed);
+        return Accelerate(accelDir, prevVelocity, CM_accelerate, CM_groundspeed);
     }
 
     private Vector3 MoveAir(Vector3 accelDir, Vector3 prevVelocity)
     {
-        float wishspeed = 200f;
         // air_accelerate and max_velocity_air are server-defined movement variables
-        return Accelerate(accelDir, prevVelocity, CM_airaccelerate, maxspeed, wishspeed);
+        return Accelerate(accelDir, prevVelocity, CM_airaccelerate, CM_airspeed);
     }
 
     public override void OnDebugDraw()
